@@ -1,0 +1,6 @@
+name: TFArenaGame
+version: '${project.version}'
+main: net.tfgames.tfarenagame.TFArenaGame
+api-version: 1.19
+depend: [TFServerCore]
+softdepend: [Multiverse-Core]
