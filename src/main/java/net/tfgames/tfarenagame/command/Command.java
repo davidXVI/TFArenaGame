@@ -22,7 +22,6 @@ public abstract class Command extends BukkitCommand {
     protected final TFServerCore serverCore;
     protected final GameConfig gameConfig;
     protected final MessageUtil messageUtil;
-    //
 
     protected Command (TFArenaGame plugin, @NotNull String command, String[] aliases, String description, String permission, boolean playerOnly){
         super(command);
