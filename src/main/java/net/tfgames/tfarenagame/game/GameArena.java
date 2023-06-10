@@ -15,6 +15,7 @@ import net.tfgames.tfgamingcore.games.GameState;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -46,6 +47,7 @@ public class GameArena {
 
     public void start() {
         kills.clear();
+        ingamePlayers.clear();
         gameDuration = 300;
 
         arena.setState(GameState.JOGANDO);
@@ -53,10 +55,6 @@ public class GameArena {
         for (Player arenaPlayer : arena.getPlayers()) {
             ingamePlayers.add(arenaPlayer);
             setPlayerKit(arenaPlayer);
-
-            //for(int s = 1; s <= arena.getPlayers().size(); s++) {
-            //    arenaPlayer.teleport(GameConfig.getSpawn(arena.getID(), s));
-            //}
 
             arenaPlayer.teleport(GameConfig.getRandomSpawn(arena.getID(), 15));
 
@@ -110,7 +108,7 @@ public class GameArena {
     }
 
     public void checkGameOver() {
-        if (gameDuration == 0) {
+        if (gameDuration == 0 || ingamePlayers.size() == 1) {
             List<Player> keys = kills.entrySet().stream().sorted(Map.Entry.<Player, Integer>comparingByValue().reversed())
                     .limit(1).map(Map.Entry::getKey).collect(Collectors.toList());
             winningPlayer = keys.get(0);
@@ -130,11 +128,13 @@ public class GameArena {
                 Component winningSubText = Component.text("Você terminou com mais kills!").color(NamedTextColor.GRAY);
                 Title winningTitle = Title.title(winningText, winningSubText);
                 player.showTitle(winningTitle);
+                player.playSound(player, Sound.ENTITY_PLAYER_LEVELUP, 1.0F , 1.0F);
             } else {
                 Component losingText = Component.text("DERROTA!").color(NamedTextColor.RED);
                 Component losingSubText = Component.text("Não foi dessa vez...").color(NamedTextColor.GRAY);
                 Title winningTitle = Title.title(losingText, losingSubText);
                 player.showTitle(winningTitle);
+                player.playSound(player, Sound.ENTITY_GENERIC_EXPLODE, 1.0F , 1.0F);
             }
         }
 
@@ -158,6 +158,9 @@ public class GameArena {
                 if (endDuration == 0){
                     cancel();
                     arena.reset();
+                    ingamePlayers.clear();
+                    kills.clear();
+
                 }
 
                 endDuration--;
@@ -171,38 +174,36 @@ public class GameArena {
 
         ItemBuilder diamondSword = new ItemBuilder(Material.DIAMOND_SWORD);
         diamondSword.setEnchantment(Enchantment.DAMAGE_ALL, 5);
-        diamondSword.setEnchantment(Enchantment.FIRE_ASPECT, 2);
         diamondSword.setUnbreakable();
         diamondSword.setFlag(ItemFlag.HIDE_UNBREAKABLE);
         player.getInventory().setItem(0, diamondSword.build());
 
         ItemBuilder diamondHelmet = new ItemBuilder(Material.DIAMOND_HELMET);
-        diamondHelmet.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
+        diamondHelmet.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         diamondHelmet.setUnbreakable();
         diamondHelmet.setFlag(ItemFlag.HIDE_UNBREAKABLE);
         player.getInventory().setHelmet(diamondHelmet.build());
 
         ItemBuilder diamondChestplate = new ItemBuilder(Material.DIAMOND_CHESTPLATE);
-        diamondChestplate.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
+        diamondChestplate.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         diamondChestplate.setUnbreakable();
         diamondChestplate.setFlag(ItemFlag.HIDE_UNBREAKABLE);
         player.getInventory().setChestplate(diamondChestplate.build());
 
         ItemBuilder diamondLeggings = new ItemBuilder(Material.DIAMOND_LEGGINGS);
-        diamondLeggings.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
+        diamondLeggings.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         diamondLeggings.setUnbreakable();
         diamondLeggings.setFlag(ItemFlag.HIDE_UNBREAKABLE);
         player.getInventory().setLeggings(diamondLeggings.build());
 
         ItemBuilder diamondBoots = new ItemBuilder(Material.DIAMOND_BOOTS);
-        diamondBoots.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 5);
+        diamondBoots.setEnchantment(Enchantment.PROTECTION_ENVIRONMENTAL, 4);
         diamondBoots.setUnbreakable();
         diamondBoots.setFlag(ItemFlag.HIDE_UNBREAKABLE);
         player.getInventory().setBoots(diamondBoots.build());
 
         ItemBuilder bow = new ItemBuilder(Material.BOW);
         bow.setEnchantment(Enchantment.ARROW_DAMAGE, 5);
-        bow.setEnchantment(Enchantment.ARROW_FIRE, 2);
         bow.setEnchantment(Enchantment.ARROW_INFINITE, 1);
         bow.setEnchantment(Enchantment.ARROW_KNOCKBACK, 2);
         bow.setUnbreakable();
@@ -241,10 +242,10 @@ public class GameArena {
         ItemBuilder velocityPot = new ItemBuilder(Material.POTION);
         PotionMeta velPotMeta = (PotionMeta) velocityPot.getMeta();
         velPotMeta.addCustomEffect(new PotionEffect(PotionEffectType.SPEED, 100, 1), true);
-        regenPot.setName(ChatColor.WHITE + "Poção de Velocidade" + ChatColor.GRAY + " (5s)");
         velPotMeta.setColor(Color.SILVER);
         velocityPot.setMeta(velPotMeta);
         velocityPot.setAmount(5);
+        velocityPot.setName(ChatColor.WHITE + "Poção de Velocidade" + ChatColor.GRAY + " (5s)");
         player.getInventory().setItem(7, velocityPot.build());
 
     }
@@ -253,8 +254,6 @@ public class GameArena {
         kills.put(player, kills.get(player) + 1);
         int killReward = 15;
 
-        //serverCore.getPlayerManager().addCreditos(player, killReward);
-        player.sendRichMessage("<green>[$] <gold>+5 <gray>créditos!");
     }
 
     public void setGameSidebar(Player sidebarPlayer){
@@ -263,7 +262,7 @@ public class GameArena {
             public void run() {
 
                 if (gameDuration == 0) {runnable.cancel(); }
-                else {
+                else if (ingamePlayers.contains(sidebarPlayer)){
 
                     Component title = Component.text(arena.getGame(arena.getID()).getDisplay().toUpperCase())
                             .color(arena.getGame(arena.getID()).getColor())

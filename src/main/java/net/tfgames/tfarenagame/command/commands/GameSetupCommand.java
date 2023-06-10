@@ -6,6 +6,8 @@ import net.tfgames.tfarenagame.game.GameConfig;
 import net.tfgames.tfgamingcore.util.ErrorMessages;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class GameSetupCommand extends Command {
@@ -52,6 +54,12 @@ public class GameSetupCommand extends Command {
 
     @Override
     public List<String> onTabComplete(CommandSender sender, String[] args) {
+        List<String> options = new ArrayList<>();
+        if(args.length == 1){
+            options.add("setspawn");
+            options.add("tpspawn");
+            options.add("createarena");
+        }
         return null;
     }
 }
